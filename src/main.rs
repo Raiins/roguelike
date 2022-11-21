@@ -9,10 +9,21 @@ mod player;
 pub use player::*;
 mod rect;
 pub use rect::Rect;
+mod visiblity_system;
+use visiblity_system::VisibilitySystem;
 
 // Our state has a world
 pub struct State {
-    ecs: World,
+    pub ecs: World,
+}
+
+// What systems does the state have, and allows shit to run and modify stuff
+impl State {
+    fn run_systems(&mut self) {
+        let mut vis = VisibilitySystem{};
+        vis.run_now(&self.ecs);
+        self.ecs.maintain();
+    }
 }
 
 // State is an implementation of GameState from RLTK
@@ -30,8 +41,7 @@ impl GameState for State {
         // Run the logic systems
         self.run_systems();
 
-        let map = self.ecs.fetch::<Vec<TileType>>();
-        draw_map(&map, ctx);
+        draw_map(&self.ecs, ctx);
 
         // Get the positions of entities and what to render
         let positions = self.ecs.read_storage::<Position>();
@@ -42,13 +52,6 @@ impl GameState for State {
         for (pos, render) in (&positions, &renderables).join() { 
             ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph);
         }
-    }
-}
-
-// What systems does the state have, and allows shit to run and modify stuff
-impl State {
-    fn run_systems(&mut self) {
-        self.ecs.maintain();
     }
 }
 
@@ -71,10 +74,12 @@ fn main() -> rltk::BError {
     gs.ecs.register::<Position>();
     gs.ecs.register::<Renderable>();
     gs.ecs.register::<Player>();
+    gs.ecs.register::<Viewshed>();
 
-    let (rooms, map) = new_map_rooms_and_corridors();
+    let map: Map = Map::new_map_rooms_and_corridors();
+    let (player_x, player_y) = map.rooms[0].center();
     gs.ecs.insert(map);
-    let (player_x, player_y) = rooms[0].center();
+
 
     // creating our main character
     gs.ecs
@@ -89,6 +94,11 @@ fn main() -> rltk::BError {
             bg: RGB::named(rltk::BLACK),
         })
         .with(Player{})
+        .with(Viewshed {
+            visible_tiles: Vec::new(),
+            range: 8,
+            dirty: true,
+        })
         .build();
     
     // runs the main loop from the rltk library 
