@@ -19,7 +19,7 @@ pub struct Renderable {
 
 // Player component
 #[derive(Component, Debug)]
-pub struct Player {}
+pub struct Player { }
 
 // Viewshed makes parts of the map invisible
 #[derive(Component)]
@@ -27,4 +27,13 @@ pub struct Viewshed {
     pub visible_tiles: Vec<rltk::Point>,
     pub range: i32,
     pub dirty: bool,
+}
+
+// Monster Component
+#[derive(Component, Debug)]
+pub struct Monster { }
+
+#[derive(Component, Debug)]
+pub struct Name {
+    pub name: String
 }

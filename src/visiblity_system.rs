@@ -1,4 +1,4 @@
-use specs::{prelude::*, storage::GenericReadStorage};
+use specs::prelude::*;
 use super::{Viewshed, Position, Map, Player};
 use rltk::{field_of_view, Point};
 
